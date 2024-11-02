@@ -1,92 +1,126 @@
 import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
-from tkinter import simpledialog, messagebox
+from tkinter import ttk, messagebox
 
 # Configuración inicial de SymPy
 x = sp.symbols('x')
 
-def solicitar_funcion():
-    # Solicita al usuario una función en una ventana emergente
-    expr = simpledialog.askstring("Entrada de función", "Introduce la función en términos de x (ejemplo: sin(x) o x**2):")
+def solicitar_funcion(entry_func):
+    expr = entry_func.get()
     if expr:
-        return sp.sympify(expr)
+        try:
+            return sp.sympify(expr)
+        except sp.SympifyError:
+            messagebox.showerror("Error", "Función inválida. Inténtalo de nuevo.")
+            return None
     else:
         messagebox.showerror("Error", "No se ingresó ninguna función.")
         return None
 
-def solicitar_derivadas():
-    # Solicita al usuario el número de derivadas
-    while True:
-        try:
-            veces = simpledialog.askinteger("Número de derivadas", "¿Cuántas veces deseas derivar la función?", minvalue=1)
-            if veces is not None:
-                return veces
-            else:
-                messagebox.showerror("Error", "Por favor, introduce un número entero positivo.")
-        except ValueError:
-            messagebox.showerror("Error", "Entrada inválida. Inténtalo de nuevo.")
+def solicitar_derivadas(entry_derivadas):
+    veces = entry_derivadas.get()
+    try:
+        veces = int(veces)
+        if veces >= 1:
+            return veces
+        else:
+            messagebox.showerror("Error", "Introduce un número entero positivo.")
+            return None
+    except ValueError:
+        messagebox.showerror("Error", "Entrada inválida. Inténtalo de nuevo.")
+        return None
 
 def derivar_funcion(funcion, veces):
-    # Calcula la derivada de la función la cantidad de veces indicada
     derivada = funcion
     for _ in range(veces):
         derivada = sp.diff(derivada, x)
     return derivada
 
-def graficar_funciones(funcion, derivadas):
-    # Define el rango de valores de x para graficar
+def graficar_funciones(funcion, derivadas, frame_plot):
     x_vals = np.linspace(-10, 10, 400)
     f_lambdified = sp.lambdify(x, funcion, modules=["numpy"])
     y_vals = f_lambdified(x_vals)
     
-    # Grafica la función original con su expresión en la leyenda
-    plt.plot(x_vals, y_vals, label=f"Función original: {sp.pretty(funcion)}", color="blue")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(x_vals, y_vals, label=f"Función original: {sp.pretty(funcion)}", color="blue")
     
-    # Colores para las derivadas
     colores = ["red", "green", "purple", "orange"]
     for i, deriv in enumerate(derivadas):
         f_deriv_lambdified = sp.lambdify(x, deriv, modules=["numpy"])
-        
-        # Verifica si la derivada es una constante y crea un array con el mismo tamaño de x_vals
         try:
             y_deriv_vals = f_deriv_lambdified(x_vals)
         except TypeError:
             y_deriv_vals = np.full_like(x_vals, float(deriv))
         
-        # Muestra la expresión de cada derivada en la leyenda
-        plt.plot(x_vals, y_deriv_vals, label=f"{i+1}ª derivada: {sp.pretty(deriv)}", color=colores[i % len(colores)])
+        ax.plot(x_vals, y_deriv_vals, label=f"{i+1}ª derivada: {sp.pretty(deriv)}", color=colores[i % len(colores)])
     
-    # Configuración de la cuadrícula, los ejes y el título
-    plt.axhline(0, color='black', linewidth=0.5)
-    plt.axvline(0, color='black', linewidth=0.5)
-    plt.grid(color='gray', linestyle='--', linewidth=0.5)
-    plt.xlabel("Y")
-    plt.ylabel("X")
-    plt.title("Función original y sus derivadas")
-    plt.legend()
-    plt.show()
+    ax.axhline(0, color='black', linewidth=0.5)
+    ax.axvline(0, color='black', linewidth=0.5)
+    ax.grid(color='gray', linestyle='--', linewidth=0.5)
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_title("Función original y sus derivadas")
+    ax.legend()
 
-def main():
-    # Configuración de la ventana principal de Tkinter
-    root = tk.Tk()
-    root.withdraw()  # Oculta la ventana principal
+    # Eliminar cualquier gráfico previo del frame_plot y agregar el nuevo
+    for widget in frame_plot.winfo_children():
+        widget.destroy()
 
-    # Solicita la función y el número de derivadas a través de ventanas emergentes
-    funcion = solicitar_funcion()
+    canvas = FigureCanvasTkAgg(fig, master=frame_plot)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+def ejecutar_grafico(entry_func, entry_derivadas, frame_plot):
+    funcion = solicitar_funcion(entry_func)
     if funcion is None:
         return
     
-    num_derivadas = solicitar_derivadas()
+    num_derivadas = solicitar_derivadas(entry_derivadas)
     if num_derivadas is None:
         return
     
-    # Calcula las derivadas y grafica
     derivadas = [derivar_funcion(funcion, i + 1) for i in range(num_derivadas)]
-    graficar_funciones(funcion, derivadas)
+    graficar_funciones(funcion, derivadas, frame_plot)
 
-# Ejecuta el programa principal
+def limpiar_entradas(entry_func, entry_derivadas):
+    entry_func.delete(0, tk.END)
+    entry_derivadas.delete(0, tk.END)
+
+def main():
+    root = tk.Tk()
+    root.title("Graficador de Funciones y Derivadas")
+    root.geometry("800x600")
+
+    style = ttk.Style(root)
+    style.theme_use("clam")
+
+    frame_input = ttk.Frame(root, padding="10")
+    frame_input.pack(fill=tk.X, side=tk.TOP)
+
+    ttk.Label(frame_input, text="Función (en términos de x):").grid(row=0, column=0, sticky=tk.W)
+    entry_func = ttk.Entry(frame_input, width=50)
+    entry_func.grid(row=0, column=1, padx=5, pady=5)
+
+    ttk.Label(frame_input, text="Número de derivadas:").grid(row=1, column=0, sticky=tk.W)
+    entry_derivadas = ttk.Entry(frame_input, width=50)
+    entry_derivadas.grid(row=1, column=1, padx=5, pady=5)
+
+    # Botón para graficar la función
+    btn_graficar = ttk.Button(frame_input, text="Graficar", command=lambda: ejecutar_grafico(entry_func, entry_derivadas, frame_plot))
+    btn_graficar.grid(row=2, column=0, pady=10, sticky=tk.E)
+
+    # Botón para limpiar las entradas y permitir ingresar otra función
+    btn_limpiar = ttk.Button(frame_input, text="Graficar otra función", command=lambda: limpiar_entradas(entry_func, entry_derivadas))
+    btn_limpiar.grid(row=2, column=1, pady=10, sticky=tk.W)
+
+    global frame_plot
+    frame_plot = ttk.Frame(root)
+    frame_plot.pack(fill=tk.BOTH, expand=True)
+
+    root.mainloop()
+
 if __name__ == "__main__":
     main()
-
