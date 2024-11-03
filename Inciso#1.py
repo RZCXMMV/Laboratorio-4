@@ -42,7 +42,7 @@ def derivar_funcion(funcion, veces):
 def graficar_funciones(funcion, derivadas, frame_plot):
     x_vals = np.linspace(-10, 10, 400)
     f_lambdified = sp.lambdify(x, funcion, modules=["numpy"])
-    y_vals = f_lambdified(x_vals)
+    y_vals = np.linspace(-10, 10, 400)
     
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.plot(x_vals, y_vals, label=f"Función original: {sp.pretty(funcion)}", color="blue")
@@ -85,10 +85,6 @@ def ejecutar_grafico(entry_func, entry_derivadas, frame_plot):
     derivadas = [derivar_funcion(funcion, i + 1) for i in range(num_derivadas)]
     graficar_funciones(funcion, derivadas, frame_plot)
 
-def limpiar_entradas(entry_func, entry_derivadas):
-    entry_func.delete(0, tk.END)
-    entry_derivadas.delete(0, tk.END)
-
 def main():
     root = tk.Tk()
     root.title("Graficador de Funciones y Derivadas")
@@ -110,11 +106,7 @@ def main():
 
     # Botón para graficar la función
     btn_graficar = ttk.Button(frame_input, text="Graficar", command=lambda: ejecutar_grafico(entry_func, entry_derivadas, frame_plot))
-    btn_graficar.grid(row=2, column=0, pady=10, sticky=tk.E)
-
-    # Botón para limpiar las entradas y permitir ingresar otra función
-    btn_limpiar = ttk.Button(frame_input, text="Graficar otra función", command=lambda: limpiar_entradas(entry_func, entry_derivadas))
-    btn_limpiar.grid(row=2, column=1, pady=10, sticky=tk.W)
+    btn_graficar.grid(row=2, column=1, pady=10)
 
     global frame_plot
     frame_plot = ttk.Frame(root)
