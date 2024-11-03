@@ -6,13 +6,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 # Configuración inicial de SymPy
-x = sp.symbols('x')
+X = sp.symbols('x')
 
-def solicitar_funcion(entry_func):
-    expr = entry_func.get()
-    if expr:
+def SolicitarFuncion(EntryFunc):
+    Expr = EntryFunc.get()
+    if Expr:
         try:
-            return sp.sympify(expr)
+            return sp.sympify(Expr)
         except sp.SympifyError:
             messagebox.showerror("Error", "Función inválida. Inténtalo de nuevo.")
             return None
@@ -20,128 +20,128 @@ def solicitar_funcion(entry_func):
         messagebox.showerror("Error", "No se ingresó ninguna función.")
         return None
 
-def solicitar_punto(entry_x, entry_y):
+def SolicitarPunto(EntryX, EntryY):
     try:
-        x_punto = float(entry_x.get())
-        y_punto = float(entry_y.get())
-        return x_punto, y_punto
+        XPunto = float(EntryX.get())
+        YPunto = float(EntryY.get())
+        return XPunto, YPunto
     except ValueError:
         messagebox.showerror("Error", "Los valores de x e y deben ser numéricos.")
         return None, None
 
-def verificar_punto(funcion, x_valor, y_valor):
-    y_funcion = sp.lambdify(x, funcion, modules=["numpy"])
-    return np.isclose(y_funcion(x_valor), y_valor)
+def VerificarPunto(Funcion, XValor, YValor):
+    YFuncion = sp.lambdify(X, Funcion, modules=["numpy"])
+    return np.isclose(YFuncion(XValor), YValor)
 
-def graficar_funcion_con_punto(funcion, x_punto, y_punto, pertenece, frame_plot):
-    x_vals = np.linspace(-10, 10, 400)
-    f_lambdified = sp.lambdify(x, funcion, modules=["numpy"])
-    y_vals = f_lambdified(x_vals)
+def GraficarFuncionConPunto(Funcion, XPunto, YPunto, Pertenece, FramePlot):
+    XVals = np.linspace(-10, 10, 400)
+    FLambdified = sp.lambdify(X, Funcion, modules=["numpy"])
+    YVals = FLambdified(XVals)
     
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(x_vals, y_vals, label="Función original", color="blue")
-    ax.plot(x_punto, y_punto, "r*" if pertenece else "g*", markersize=10, 
-            label="Punto en la función" if pertenece else "Punto fuera de la función")
+    Fig, Ax = plt.subplots(figsize=(10, 6))
+    Ax.plot(XVals, YVals, label="Función original", color="blue")
+    Ax.plot(XPunto, YPunto, "g*" if Pertenece else "r*", markersize=10, 
+            label="Punto en la función" if Pertenece else "Punto fuera de la función")
     
-    ax.axhline(0, color='black', linewidth=0.5)
-    ax.axvline(0, color='black', linewidth=0.5)
-    ax.grid(color='gray', linestyle='--', linewidth=0.5)
-    ax.set_xlabel("X")
-    ax.set_ylabel("f(x)")
-    ax.set_title("Función con el punto indicado")
-    ax.legend()
+    Ax.axhline(0, color='black', linewidth=0.5)
+    Ax.axvline(0, color='black', linewidth=0.5)
+    Ax.grid(color='gray', linestyle='--', linewidth=0.5)
+    Ax.set_xlabel("X")
+    Ax.set_ylabel("f(x)")
+    Ax.set_title("Función con el punto indicado")
+    Ax.legend()
 
-    for widget in frame_plot.winfo_children():
-        widget.destroy()
+    for Widget in FramePlot.winfo_children():
+        Widget.destroy()
 
-    canvas = FigureCanvasTkAgg(fig, master=frame_plot)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    Canvas = FigureCanvasTkAgg(Fig, master=FramePlot)
+    Canvas.draw()
+    Canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-def graficar_recta_tangente(funcion, x_punto, frame_plot):
-    derivada = sp.diff(funcion, x)
-    f_lambdified = sp.lambdify(x, funcion, modules=["numpy"])
-    f_prime_lambdified = sp.lambdify(x, derivada, modules=["numpy"])
+def GraficarRectaTangente(Funcion, XPunto, FramePlot):
+    Derivada = sp.diff(Funcion, X)
+    FLambdified = sp.lambdify(X, Funcion, modules=["numpy"])
+    FPrimeLambdified = sp.lambdify(X, Derivada, modules=["numpy"])
     
-    pendiente = f_prime_lambdified(x_punto)
-    y_punto = f_lambdified(x_punto)
+    Pendiente = FPrimeLambdified(XPunto)
+    YPunto = FLambdified(XPunto)
     
-    x_vals = np.linspace(x_punto - 5, x_punto + 5, 400)
-    recta_tangente = pendiente * (x_vals - x_punto) + y_punto
+    XVals = np.linspace(XPunto - 5, XPunto + 5, 400)
+    RectaTangente = Pendiente * (XVals - XPunto) + YPunto
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(x_vals, f_lambdified(x_vals), label="Función original", color="blue")
-    ax.plot(x_vals, recta_tangente, label="Recta Tangente", color="green")
-    ax.plot(x_punto, y_punto, "r*", markersize=10, label="Punto dado")
+    Fig, Ax = plt.subplots(figsize=(10, 6))
+    Ax.plot(XVals, FLambdified(XVals), label="Función original", color="blue")
+    Ax.plot(XVals, RectaTangente, label="Recta Tangente", color="green")
+    Ax.plot(XPunto, YPunto, "r*", markersize=10, label="Punto dado")
     
-    ax.axhline(0, color='black', linewidth=0.5)
-    ax.axvline(0, color='black', linewidth=0.5)
-    ax.grid(color='gray', linestyle='--', linewidth=0.5)
-    ax.set_xlabel("X")
-    ax.set_ylabel("f(x)")
-    ax.set_title("Función y su recta tangente en el punto dado")
-    ax.legend()
+    Ax.axhline(0, color='black', linewidth=0.5)
+    Ax.axvline(0, color='black', linewidth=0.5)
+    Ax.grid(color='gray', linestyle='--', linewidth=0.5)
+    Ax.set_xlabel("X")
+    Ax.set_ylabel("f(x)")
+    Ax.set_title("Función y su recta tangente en el punto dado")
+    Ax.legend()
 
-    for widget in frame_plot.winfo_children():
-        widget.destroy()
+    for Widget in FramePlot.winfo_children():
+        Widget.destroy()
 
-    canvas = FigureCanvasTkAgg(fig, master=frame_plot)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    Canvas = FigureCanvasTkAgg(Fig, master=FramePlot)
+    Canvas.draw()
+    Canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-def ejecutar_grafico(entry_func, entry_x, entry_y, frame_plot, lbl_verificacion):
-    funcion = solicitar_funcion(entry_func)
-    if funcion is None:
+def EjecutarGrafico(EntryFunc, EntryX, EntryY, FramePlot, LblVerificacion):
+    Funcion = SolicitarFuncion(EntryFunc)
+    if Funcion is None:
         return
     
-    x_punto, y_punto = solicitar_punto(entry_x, entry_y)
-    if x_punto is None or y_punto is None:
+    XPunto, YPunto = SolicitarPunto(EntryX, EntryY)
+    if XPunto is None or YPunto is None:
         return
     
-    pertenece = verificar_punto(funcion, x_punto, y_punto)
-    if pertenece:
-        lbl_verificacion.config(text="El punto pertenece a la función.", foreground="green")
+    Pertenece = VerificarPunto(Funcion, XPunto, YPunto)
+    if Pertenece:
+        LblVerificacion.config(text="El punto pertenece a la función.", foreground="green")
     else:
-        lbl_verificacion.config(text="El punto no pertenece a la función.", foreground="red")
+        LblVerificacion.config(text="El punto no pertenece a la función.", foreground="red")
 
-    graficar_funcion_con_punto(funcion, x_punto, y_punto, pertenece, frame_plot)
+    GraficarFuncionConPunto(Funcion, XPunto, YPunto, Pertenece, FramePlot)
     
-    if pertenece:
-        graficar_recta_tangente(funcion, x_punto, frame_plot)
+    if Pertenece:
+        GraficarRectaTangente(Funcion, XPunto, FramePlot)
 
-def main():
-    root = tk.Tk()
-    root.title("Graficador de Funciones y Derivadas")
-    root.geometry("800x600")
+def Main():
+    Root = tk.Tk()
+    Root.title("Graficador de Funciones y Derivadas")
+    Root.geometry("800x600")
 
-    frame_input = ttk.Frame(root, padding="10")
-    frame_input.pack(fill=tk.X, side=tk.TOP)
+    FrameInput = ttk.Frame(Root, padding="10")
+    FrameInput.pack(fill=tk.X, side=tk.TOP)
 
-    ttk.Label(frame_input, text="Función (en términos de x):").grid(row=0, column=0, sticky=tk.W)
-    entry_func = ttk.Entry(frame_input, width=50)
-    entry_func.grid(row=0, column=1, padx=5, pady=5)
+    ttk.Label(FrameInput, text="Función (en términos de x):").grid(row=0, column=0, sticky=tk.W)
+    EntryFunc = ttk.Entry(FrameInput, width=50)
+    EntryFunc.grid(row=0, column=1, padx=5, pady=5)
 
-    ttk.Label(frame_input, text="Valor de x del punto:").grid(row=1, column=0, sticky=tk.W)
-    entry_x = ttk.Entry(frame_input, width=20)
-    entry_x.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
+    ttk.Label(FrameInput, text="Valor de x del punto:").grid(row=1, column=0, sticky=tk.W)
+    EntryX = ttk.Entry(FrameInput, width=20)
+    EntryX.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
 
-    ttk.Label(frame_input, text="Valor de y del punto:").grid(row=2, column=0, sticky=tk.W)
-    entry_y = ttk.Entry(frame_input, width=20)
-    entry_y.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+    ttk.Label(FrameInput, text="Valor de y del punto:").grid(row=2, column=0, sticky=tk.W)
+    EntryY = ttk.Entry(FrameInput, width=20)
+    EntryY.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
 
     # Etiqueta para mostrar el resultado de la verificación
-    lbl_verificacion = ttk.Label(frame_input, text="")
-    lbl_verificacion.grid(row=4, column=1, pady=10)
+    LblVerificacion = ttk.Label(FrameInput, text="")
+    LblVerificacion.grid(row=4, column=1, pady=10)
 
-    btn_graficar = ttk.Button(frame_input, text="Graficar", 
-                              command=lambda: ejecutar_grafico(entry_func, entry_x, entry_y, frame_plot, lbl_verificacion))
-    btn_graficar.grid(row=3, column=1, pady=10, sticky=tk.E)
+    BtnGraficar = ttk.Button(FrameInput, text="Graficar", 
+                              command=lambda: EjecutarGrafico(EntryFunc, EntryX, EntryY, FramePlot, LblVerificacion))
+    BtnGraficar.grid(row=3, column=1, pady=10, sticky=tk.E)
 
-    global frame_plot
-    frame_plot = ttk.Frame(root)
-    frame_plot.pack(fill=tk.BOTH, expand=True)
+    global FramePlot
+    FramePlot = ttk.Frame(Root)
+    FramePlot.pack(fill=tk.BOTH, expand=True)
 
-    root.mainloop()
+    Root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    Main()

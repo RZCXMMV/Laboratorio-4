@@ -6,13 +6,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 # Configuración inicial de SymPy
-x = sp.symbols('x')
+X = sp.symbols('x')
 
-def solicitar_funcion(entry_func):
-    expr = entry_func.get()
-    if expr:
+def SolicitarFuncion(EntryFunc):
+    Expr = EntryFunc.get()
+    if Expr:
         try:
-            return sp.sympify(expr)
+            return sp.sympify(Expr)
         except sp.SympifyError:
             messagebox.showerror("Error", "Función inválida. Inténtalo de nuevo.")
             return None
@@ -20,12 +20,12 @@ def solicitar_funcion(entry_func):
         messagebox.showerror("Error", "No se ingresó ninguna función.")
         return None
 
-def solicitar_derivadas(entry_derivadas):
-    veces = entry_derivadas.get()
+def SolicitarDerivadas(EntryDerivadas):
+    Veces = EntryDerivadas.get()
     try:
-        veces = int(veces)
-        if veces >= 1:
-            return veces
+        Veces = int(Veces)
+        if Veces >= 1:
+            return Veces
         else:
             messagebox.showerror("Error", "Introduce un número entero positivo.")
             return None
@@ -33,86 +33,93 @@ def solicitar_derivadas(entry_derivadas):
         messagebox.showerror("Error", "Entrada inválida. Inténtalo de nuevo.")
         return None
 
-def derivar_funcion(funcion, veces):
-    derivada = funcion
-    for _ in range(veces):
-        derivada = sp.diff(derivada, x)
-    return derivada
-
-def graficar_funciones(funcion, derivadas, frame_plot):
-    x_vals = np.linspace(-10, 10, 400)
-    f_lambdified = sp.lambdify(x, funcion, modules=["numpy"])
-    y_vals = np.linspace(-10, 10, 400)
-    
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(x_vals, y_vals, label=f"Función original: {sp.pretty(funcion)}", color="blue")
-    
-    colores = ["red", "green", "purple", "orange"]
-    for i, deriv in enumerate(derivadas):
-        f_deriv_lambdified = sp.lambdify(x, deriv, modules=["numpy"])
-        try:
-            y_deriv_vals = f_deriv_lambdified(x_vals)
-        except TypeError:
-            y_deriv_vals = np.full_like(x_vals, float(deriv))
+def DerivarFuncion(Funcion, Veces):
+    Derivada = Funcion
+    Derivadas = []
+    for i in range(Veces):
+        Derivada = sp.diff(Derivada, X)
+        Derivadas.append(Derivada)
         
-        ax.plot(x_vals, y_deriv_vals, label=f"{i+1}ª derivada: {sp.pretty(deriv)}", color=colores[i % len(colores)])
+        # Validación: Si la derivada es constante, no puede derivarse más veces
+        if Derivada.is_constant():
+            messagebox.showwarning("Advertencia", f"No se puede derivar {Veces} veces. Se obtuvieron {i} derivadas.")
+            break
+    return Derivadas
+
+def GraficarFunciones(Funcion, Derivadas, FramePlot):
+    XVals = np.linspace(-10, 10, 400)
+    FLambdified = sp.lambdify(X, Funcion, modules=["numpy"])
+    YVals = FLambdified(XVals)
     
-    ax.axhline(0, color='black', linewidth=0.5)
-    ax.axvline(0, color='black', linewidth=0.5)
-    ax.grid(color='gray', linestyle='--', linewidth=0.5)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_title("Función original y sus derivadas")
-    ax.legend()
+    Fig, Ax = plt.subplots(figsize=(10, 6))
+    Ax.plot(XVals, YVals, label=f"Función original: {sp.pretty(Funcion)}", color="blue")
+    
+    Colores = ["red", "green", "purple", "orange"]
+    for i, Deriv in enumerate(Derivadas):
+        FDerivLambdified = sp.lambdify(X, Deriv, modules=["numpy"])
+        try:
+            YDerivVals = FDerivLambdified(XVals)
+        except TypeError:
+            YDerivVals = np.full_like(XVals, float(Deriv))
+        
+        Ax.plot(XVals, YDerivVals, label=f"{i+1}ª derivada: {sp.pretty(Deriv)}", color=Colores[i % len(Colores)])
+    
+    Ax.axhline(0, color='black', linewidth=0.5)
+    Ax.axvline(0, color='black', linewidth=0.5)
+    Ax.grid(color='gray', linestyle='--', linewidth=0.5)
+    Ax.set_xlabel("X")
+    Ax.set_ylabel("Y")
+    Ax.set_title("Función original y sus derivadas")
+    Ax.legend()
 
-    # Eliminar cualquier gráfico previo del frame_plot y agregar el nuevo
-    for widget in frame_plot.winfo_children():
-        widget.destroy()
+    # Eliminar cualquier gráfico previo del FramePlot y agregar el nuevo
+    for Widget in FramePlot.winfo_children():
+        Widget.destroy()
 
-    canvas = FigureCanvasTkAgg(fig, master=frame_plot)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    Canvas = FigureCanvasTkAgg(Fig, master=FramePlot)
+    Canvas.draw()
+    Canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-def ejecutar_grafico(entry_func, entry_derivadas, frame_plot):
-    funcion = solicitar_funcion(entry_func)
-    if funcion is None:
+def EjecutarGrafico(EntryFunc, EntryDerivadas, FramePlot):
+    Funcion = SolicitarFuncion(EntryFunc)
+    if Funcion is None:
         return
     
-    num_derivadas = solicitar_derivadas(entry_derivadas)
-    if num_derivadas is None:
+    NumDerivadas = SolicitarDerivadas(EntryDerivadas)
+    if NumDerivadas is None:
         return
     
-    derivadas = [derivar_funcion(funcion, i + 1) for i in range(num_derivadas)]
-    graficar_funciones(funcion, derivadas, frame_plot)
+    Derivadas = DerivarFuncion(Funcion, NumDerivadas)
+    GraficarFunciones(Funcion, Derivadas, FramePlot)
 
-def main():
-    root = tk.Tk()
-    root.title("Graficador de Funciones y Derivadas")
-    root.geometry("800x600")
+def Main():
+    Root = tk.Tk()
+    Root.title("Graficador de Funciones y Derivadas")
+    Root.geometry("800x600")
 
-    style = ttk.Style(root)
-    style.theme_use("clam")
+    Style = ttk.Style(Root)
+    Style.theme_use("clam")
 
-    frame_input = ttk.Frame(root, padding="10")
-    frame_input.pack(fill=tk.X, side=tk.TOP)
+    FrameInput = ttk.Frame(Root, padding="10")
+    FrameInput.pack(fill=tk.X, side=tk.TOP)
 
-    ttk.Label(frame_input, text="Función (en términos de x):").grid(row=0, column=0, sticky=tk.W)
-    entry_func = ttk.Entry(frame_input, width=50)
-    entry_func.grid(row=0, column=1, padx=5, pady=5)
+    ttk.Label(FrameInput, text="Función (en términos de x):").grid(row=0, column=0, sticky=tk.W)
+    EntryFunc = ttk.Entry(FrameInput, width=50)
+    EntryFunc.grid(row=0, column=1, padx=5, pady=5)
 
-    ttk.Label(frame_input, text="Número de derivadas:").grid(row=1, column=0, sticky=tk.W)
-    entry_derivadas = ttk.Entry(frame_input, width=50)
-    entry_derivadas.grid(row=1, column=1, padx=5, pady=5)
+    ttk.Label(FrameInput, text="Número de derivadas:").grid(row=1, column=0, sticky=tk.W)
+    EntryDerivadas = ttk.Entry(FrameInput, width=50)
+    EntryDerivadas.grid(row=1, column=1, padx=5, pady=5)
 
     # Botón para graficar la función
-    btn_graficar = ttk.Button(frame_input, text="Graficar", command=lambda: ejecutar_grafico(entry_func, entry_derivadas, frame_plot))
-    btn_graficar.grid(row=2, column=1, pady=10)
+    BtnGraficar = ttk.Button(FrameInput, text="Graficar", command=lambda: EjecutarGrafico(EntryFunc, EntryDerivadas, FramePlot))
+    BtnGraficar.grid(row=2, column=1, pady=10)
 
-    global frame_plot
-    frame_plot = ttk.Frame(root)
-    frame_plot.pack(fill=tk.BOTH, expand=True)
+    global FramePlot
+    FramePlot = ttk.Frame(Root)
+    FramePlot.pack(fill=tk.BOTH, expand=True)
 
-    root.mainloop()
+    Root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    Main()
