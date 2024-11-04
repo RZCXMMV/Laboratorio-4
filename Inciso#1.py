@@ -12,7 +12,12 @@ def SolicitarFuncion(EntryFunc):
     Expr = EntryFunc.get()
     if Expr:
         try:
-            return sp.sympify(Expr)
+            Funcion = sp.sympify(Expr)
+            # Validación adicional para funciones racionales (con denominadores)
+            numerador, denominador = Funcion.as_numer_denom()
+            if not denominador.is_constant():  # Verifica si el denominador no es constante
+                messagebox.showinfo("Aviso", "La función tiene un denominador. Se aplicará la regla del cociente.")
+            return Funcion
         except sp.SympifyError:
             messagebox.showerror("Error", "Función inválida. Inténtalo de nuevo.")
             return None
@@ -42,7 +47,7 @@ def DerivarFuncion(Funcion, Veces):
         
         # Validación: Si la derivada es constante, no puede derivarse más veces
         if Derivada.is_constant():
-            messagebox.showwarning("Advertencia", f"No se puede derivar {Veces} veces. Se obtuvieron {i} derivadas.")
+            messagebox.showwarning("Advertencia", f"No se puede derivar {Veces} veces. Se obtuvieron {i + 1} derivadas.")
             break
     return Derivadas
 
@@ -62,7 +67,7 @@ def GraficarFunciones(Funcion, Derivadas, FramePlot):
         except TypeError:
             YDerivVals = np.full_like(XVals, float(Deriv))
         
-        Ax.plot(XVals, YDerivVals, label=f"{i+1}ª derivada: {sp.pretty(Deriv)}", color=Colores[i % len(Colores)])
+        Ax.plot(XVals, YDerivVals, label=f"{i + 1}ª derivada: {sp.pretty(Deriv)}", color=Colores[i % len(Colores)])
     
     Ax.axhline(0, color='black', linewidth=0.5)
     Ax.axvline(0, color='black', linewidth=0.5)
@@ -70,7 +75,7 @@ def GraficarFunciones(Funcion, Derivadas, FramePlot):
     Ax.set_xlabel("X")
     Ax.set_ylabel("Y")
     Ax.set_title("Función original y sus derivadas")
-    Ax.legend()
+    Ax.legend(fontsize=12)  # Aumenta el tamaño de la fuente de la leyenda
 
     # Eliminar cualquier gráfico previo del FramePlot y agregar el nuevo
     for Widget in FramePlot.winfo_children():
@@ -103,11 +108,11 @@ def Main():
     FrameInput = ttk.Frame(Root, padding="10")
     FrameInput.pack(fill=tk.X, side=tk.TOP)
 
-    ttk.Label(FrameInput, text="Función (en términos de x):").grid(row=0, column=0, sticky=tk.W)
+    ttk.Label(FrameInput, text="Función (usando x):").grid(row=0, column=0, sticky=tk.W)
     EntryFunc = ttk.Entry(FrameInput, width=50)
     EntryFunc.grid(row=0, column=1, padx=5, pady=5)
 
-    ttk.Label(FrameInput, text="Número de derivadas:").grid(row=1, column=0, sticky=tk.W)
+    ttk.Label(FrameInput, text="Cantidad de derivaciones:").grid(row=1, column=0, sticky=tk.W)
     EntryDerivadas = ttk.Entry(FrameInput, width=50)
     EntryDerivadas.grid(row=1, column=1, padx=5, pady=5)
 
