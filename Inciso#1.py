@@ -112,7 +112,7 @@ def Main():
     EntryFunc = ttk.Entry(FrameInput, width=50)
     EntryFunc.grid(row=0, column=1, padx=5, pady=5)
 
-    ttk.Label(FrameInput, text="Cantidad de derivaciones:").grid(row=1, column=0, sticky=tk.W)
+    ttk.Label(FrameInput, text="Cantidad de derivadas:").grid(row=1, column=0, sticky=tk.W)
     EntryDerivadas = ttk.Entry(FrameInput, width=50)
     EntryDerivadas.grid(row=1, column=1, padx=5, pady=5)
 
